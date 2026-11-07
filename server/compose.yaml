@@ -51,6 +51,7 @@ services:
       SERVER: ${SERVER:-http://coord:5000}
       # Pulled from the host environment; never hardcode the key. Unset => stub.
       FISH_API_KEY: ${FISH_API_KEY:-}
+      FISH_MODEL: ${FISH_MODEL:-s2.1-pro-free}
       FISH_VOICE: ${FISH_VOICE:-}   # optional voice reference_id
       INPUT_DIR: /app/input
       OUTPUT_DIR: /app/output

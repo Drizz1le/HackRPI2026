@@ -25,6 +25,8 @@ HEADERS = {"X-Swarm-Token": TOKEN} if TOKEN else {}
 
 API_KEY = os.environ.get("FISH_API_KEY", "")
 VOICE_ID = os.environ.get("FISH_VOICE", "")  # optional reference_id
+# Fish Audio TTS model, passed as the `backend` kwarg of session.tts().
+FISH_MODEL = os.environ.get("FISH_MODEL", "s2.1-pro-free")
 INPUT_DIR = Path(os.environ.get("INPUT_DIR", "input"))
 OUTPUT_DIR = Path(os.environ.get("OUTPUT_DIR", "output"))
 DUCK_DB = int(os.environ.get("DUCK_DB", "6"))  # lower instrumental under vocals
@@ -60,10 +62,10 @@ def tts_vocals(lyrics):
         print(f"[stub] no FISH_API_KEY; wrote {path}")
         return None
 
-    # Signature verified against the fish-audio-sdk (legacy) docs:
-    #   Session(api_key).tts(TTSRequest(text=..., reference_id=..., format=...))
-    # returns an iterator of audio chunks. Wrapped per spec: on any error dump
-    # the request and return None rather than crashing the run.
+    # Verified live against fish-audio-sdk: Session(api_key).tts(TTSRequest(...),
+    # backend=<model>) returns an iterator of audio chunks. The model is the
+    # `backend` kwarg (TTSRequest has no model field). Wrapped per spec: on any
+    # error dump the request and return None rather than crashing the run.
     path = OUTPUT_DIR / "vocals.mp3"
     try:
         from fish_audio_sdk import Session, TTSRequest
@@ -74,9 +76,9 @@ def tts_vocals(lyrics):
             kwargs["reference_id"] = VOICE_ID
         request = TTSRequest(**kwargs)
         with open(path, "wb") as f:
-            for chunk in session.tts(request):
+            for chunk in session.tts(request, backend=FISH_MODEL):
                 f.write(chunk)
-        print(f"[tts] wrote vocals -> {path}")
+        print(f"[tts] wrote vocals ({FISH_MODEL}) -> {path}")
         return path
     except Exception as e:
         err = OUTPUT_DIR / "vocals_error.txt"
