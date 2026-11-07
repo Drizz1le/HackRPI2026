@@ -2,3 +2,7 @@ __pycache__/
 *.pyc
 .venv/
 venv/
+output/
+input/*.wav
+input/*.mp3
+.env
