@@ -1,7 +1,17 @@
-import requests, time
+import os, requests, time
 
-# ---- point this at the coordinator computer's LAN IP ----
-SERVER = "http://192.168.1.50:5000"  # CHANGE to the coordinator's actual IP
+# ---- point this at the coordinator computer's LAN IP (set via env var) ----
+SERVER = os.environ.get("SERVER", "http://192.168.1.50:5000")
+
+
+def register():
+    """Keep trying until the coordinator is reachable (it may start after us)."""
+    while True:
+        try:
+            return requests.post(f"{SERVER}/register", timeout=10).json()["node_id"]
+        except requests.RequestException as e:
+            print(f"can't reach coordinator at {SERVER} ({e}); retrying...")
+            time.sleep(3)
 
 
 def run_task(task):
@@ -10,7 +20,7 @@ def run_task(task):
 
 
 def main():
-    node_id = requests.post(f"{SERVER}/register").json()["node_id"]
+    node_id = register()
     print(f"registered as {node_id}, pulling tasks from {SERVER}")
     while True:
         try:

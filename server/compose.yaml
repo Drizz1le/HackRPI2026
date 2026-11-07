@@ -1,0 +1,21 @@
+# Coordinator machine:   docker compose up --build
+#   (starts the coordinator plus one local worker)
+#
+# Every other machine:    SERVER=http://<coordinator-ip>:5000 docker compose up --build --no-deps worker
+#   (starts only a worker that connects to the coordinator over the LAN)
+
+services:
+  coord:
+    build: .
+    command: ["python", "coord.py"]
+    ports:
+      - "5000:5000"
+    restart: unless-stopped
+
+  worker:
+    build: .
+    environment:
+      SERVER: ${SERVER:-http://coord:5000}
+    depends_on:
+      - coord
+    restart: unless-stopped
