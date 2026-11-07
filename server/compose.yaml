@@ -49,9 +49,12 @@ services:
     command: ["python", "master.py"]
     environment:
       SERVER: ${SERVER:-http://coord:5000}
-      MODEL_MODE: ${MODEL_MODE:-stub}
-      OLLAMA_HOST: ${OLLAMA_HOST:-http://localhost:11434}
-      MASTER_MODEL: ${MASTER_MODEL:-qwen2.5:14b}
+      # Pulled from the host environment; never hardcode the key. Unset => stub.
+      ELEVENLABS_API_KEY: ${ELEVENLABS_API_KEY:-}
+      SONG_LENGTH_MS: ${SONG_LENGTH_MS:-75000}
+      OUTPUT_DIR: /app/output
+    volumes:
+      - ../output:/app/output   # finished song lands in repo-root/output/
     depends_on:
       - coord
     restart: "no"
