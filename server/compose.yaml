@@ -49,9 +49,15 @@ services:
     command: ["python", "master.py"]
     environment:
       SERVER: ${SERVER:-http://coord:5000}
-      MODEL_MODE: ${MODEL_MODE:-stub}
-      OLLAMA_HOST: ${OLLAMA_HOST:-http://localhost:11434}
-      MASTER_MODEL: ${MASTER_MODEL:-qwen2.5:14b}
+      # Pulled from the host environment; never hardcode the key. Unset => stub.
+      FISH_API_KEY: ${FISH_API_KEY:-}
+      FISH_MODEL: ${FISH_MODEL:-s2.1-pro-free}
+      FISH_VOICE: ${FISH_VOICE:-}   # optional voice reference_id
+      INPUT_DIR: /app/input
+      OUTPUT_DIR: /app/output
+    volumes:
+      - ../output:/app/output      # finished track lands in repo-root/output/
+      - ../input:/app/input:ro     # teammate's instrumental.(wav|mp3) goes here
     depends_on:
       - coord
     restart: "no"
