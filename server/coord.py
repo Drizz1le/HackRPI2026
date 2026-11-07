@@ -1,6 +1,8 @@
 from flask import Flask, request, jsonify
 import threading, uuid, time
 
+import job
+
 app = Flask(__name__)
 lock = threading.Lock()
 
@@ -13,13 +15,11 @@ LEASE_SECS = 30  # if a worker goes quiet this long, its task is requeued
 
 
 def load_job():
-    """MVP stand-in: 10 fake chunks so you can watch the loop work.
-    Later, this is where a real cyber task gets SPLIT into subtasks."""
+    """Split the target's two versions into searcher tasks and seed the queue.
+    See job.build_tasks (reads VERSION_A_DIR / VERSION_B_DIR from the env)."""
+    tasks = job.build_tasks()
     with lock:
-        for i in range(10):
-            queue.append(
-                {"task_id": str(uuid.uuid4()), "kind": "compute", "payload": i}
-            )
+        queue.extend(tasks)
     print(f"loaded {len(queue)} tasks")
 
 

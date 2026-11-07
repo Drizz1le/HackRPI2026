@@ -18,6 +18,14 @@ services:
     command: ["python", "coord.py"]
     ports:
       - "5000:5000"
+    environment:
+      # Defaults to the built-in synthetic demo target. For a real target,
+      # mount a host dir as a volume and point these at the two version trees.
+      TARGET: ${TARGET:-sample}
+      VERSION_A_DIR: ${VERSION_A_DIR:-/app/fixtures/sample_vA}
+      VERSION_B_DIR: ${VERSION_B_DIR:-/app/fixtures/sample_vB}
+      VERSION_A: ${VERSION_A:-sample_vA}
+      VERSION_B: ${VERSION_B:-sample_vB}
     restart: unless-stopped
 
   worker:
