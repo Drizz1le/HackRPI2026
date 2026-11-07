@@ -1,9 +1,21 @@
 from flask import Flask, request, jsonify
-import threading, uuid, time
-
-import job
+import threading, uuid, time, os
 
 app = Flask(__name__)
+
+# Shared secret. Required when the coordinator is on a public host (Vultr) so
+# the open internet cannot pull tasks, poison results, or read /status. Workers
+# and the master send it as the X-Swarm-Token header. Empty = no auth (local
+# LAN only).
+TOKEN = os.environ.get("SWARM_TOKEN", "")
+
+
+@app.before_request
+def _check_token():
+    if TOKEN and request.headers.get("X-Swarm-Token") != TOKEN:
+        return jsonify({"error": "unauthorized"}), 401
+
+
 lock = threading.Lock()
 
 queue = []  # tasks waiting to be handed out
@@ -11,16 +23,19 @@ assigned = {}  # task_id -> {task, node, at}   (in progress)
 results = {}  # task_id -> result             (done)
 nodes = {}  # node_id -> last_seen time
 
-LEASE_SECS = 30  # if a worker goes quiet this long, its task is requeued
+# If a worker goes quiet this long, its task is requeued. Must comfortably
+# exceed a real model call (which can take minutes), or slow-but-alive workers
+# get their tasks double-dispatched. Override with LEASE_SECS.
+LEASE_SECS = int(os.environ.get("LEASE_SECS", "300"))
 
 
 def load_job():
-    """Split the target's two versions into searcher tasks and seed the queue.
-    See job.build_tasks (reads VERSION_A_DIR / VERSION_B_DIR from the env)."""
-    tasks = job.build_tasks()
+    """Seed the queue with the theory task. The lyrics task is enqueued once
+    the theory result arrives (it depends on the theory section layout), so it
+    is not loaded up front. See post_result."""
     with lock:
-        queue.extend(tasks)
-    print(f"loaded {len(queue)} tasks")
+        queue.append({"task_id": str(uuid.uuid4()), "role": "theory"})
+    print(f"loaded {len(queue)} task(s); lyrics follows theory")
 
 
 def requeue_dead():
@@ -61,11 +76,22 @@ def get_task():
 def post_result():
     data = request.get_json()
     tid = data["task_id"]
+    role = data.get("role")
     with lock:
-        results[tid] = data["result"]
+        newly = tid not in results
+        if newly:  # first result wins; ignore late duplicates
+            results[tid] = {"role": role, "result": data["result"]}
         assigned.pop(tid, None)
         nodes[data["node_id"]] = time.time()
-    print(f"[done] {tid[:8]} from {data['node_id']} -> {data['result']}")
+        # Dependency: once theory is in, build the lyrics task from its output.
+        if newly and role == "theory":
+            queue.append({
+                "task_id": str(uuid.uuid4()),
+                "role": "lyrics",
+                "theory": data["result"],
+            })
+            print("[enqueue] lyrics task (theory ready)")
+    print(f"[done] {role} {tid[:8]} from {data['node_id']}")
     return jsonify({"ok": True})
 
 
