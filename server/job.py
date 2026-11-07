@@ -49,6 +49,36 @@ def _rel_files(root):
     }
 
 
+def _diff_pair(name, path_a, path_b):
+    """Diff two files that both exist. Returns a change record or None if
+    they are byte-identical."""
+    if path_a.read_bytes() == path_b.read_bytes():
+        return None
+    if not (_is_text(path_a) and _is_text(path_b)):
+        return {"path": name, "kind": "binary", "diff": None}
+
+    diff = list(
+        unified_diff(
+            _read_lines(path_a),
+            _read_lines(path_b),
+            fromfile=f"a/{name}",
+            tofile=f"b/{name}",
+        )
+    )
+    if len(diff) > MAX_DIFF_LINES:
+        diff = diff[:MAX_DIFF_LINES] + [f"... (diff truncated at {MAX_DIFF_LINES} lines)\n"]
+    return {"path": name, "kind": "modified", "diff": "".join(diff)}
+
+
+def diff_files(file_a, file_b):
+    """Compare two single script files. Returns a list of 0 or 1 change
+    records. The change is labeled by the new file's name."""
+    pa, pb = Path(file_a), Path(file_b)
+    name = pb.name if pa.name == pb.name else f"{pa.name} -> {pb.name}"
+    rec = _diff_pair(name, pa, pb)
+    return [rec] if rec else []
+
+
 def diff_trees(dir_a, dir_b):
     """Compare two version directories. Returns a list of change records:
     {path, kind, diff}. kind is added | removed | modified | binary."""
@@ -58,33 +88,14 @@ def diff_trees(dir_a, dir_b):
 
     for rel in sorted(set(a) | set(b)):
         in_a, in_b = rel in a, rel in b
-
         if in_a and not in_b:
             changes.append({"path": rel, "kind": "removed", "diff": None})
-            continue
-        if in_b and not in_a:
+        elif in_b and not in_a:
             changes.append({"path": rel, "kind": "added", "diff": None})
-            continue
-
-        pa, pb = a[rel], b[rel]
-        if pa.read_bytes() == pb.read_bytes():
-            continue  # unchanged
-
-        if not (_is_text(pa) and _is_text(pb)):
-            changes.append({"path": rel, "kind": "binary", "diff": None})
-            continue
-
-        diff = list(
-            unified_diff(
-                _read_lines(pa),
-                _read_lines(pb),
-                fromfile=f"a/{rel}",
-                tofile=f"b/{rel}",
-            )
-        )
-        if len(diff) > MAX_DIFF_LINES:
-            diff = diff[:MAX_DIFF_LINES] + [f"... (diff truncated at {MAX_DIFF_LINES} lines)\n"]
-        changes.append({"path": rel, "kind": "modified", "diff": "".join(diff)})
+        else:
+            rec = _diff_pair(rel, a[rel], b[rel])
+            if rec:
+                changes.append(rec)
 
     return changes
 
@@ -125,26 +136,46 @@ def _envelope(change, version_a, version_b):
 
 
 def build_tasks():
-    """Read the configured version dirs and return a list of TaskEnvelopes.
-    Returns [] (and prints why) if the dirs are not usable."""
+    """Diff the configured target and return a list of TaskEnvelopes.
+
+    Two input modes, file mode first:
+      VERSION_A_FILE / VERSION_B_FILE  two single decompiled scripts
+      VERSION_A_DIR  / VERSION_B_DIR   two unpacked version trees
+    Returns [] (and prints why) if nothing usable is configured.
+    """
+    file_a = os.environ.get("VERSION_A_FILE")
+    file_b = os.environ.get("VERSION_B_FILE")
     dir_a = os.environ.get("VERSION_A_DIR")
     dir_b = os.environ.get("VERSION_B_DIR")
-    if not dir_a or not dir_b:
-        print("[job] VERSION_A_DIR / VERSION_B_DIR not set; no tasks loaded")
-        return []
-    if not Path(dir_a).is_dir() or not Path(dir_b).is_dir():
-        print(f"[job] version dir missing: {dir_a!r} or {dir_b!r}; no tasks loaded")
-        return []
-
-    version_a = os.environ.get("VERSION_A", Path(dir_a).name)
-    version_b = os.environ.get("VERSION_B", Path(dir_b).name)
     target = os.environ.get("TARGET", "unset-target")
+    version_a = os.environ.get("VERSION_A")
+    version_b = os.environ.get("VERSION_B")
 
-    changes = diff_trees(dir_a, dir_b)
+    if file_a and file_b:
+        if not Path(file_a).is_file() or not Path(file_b).is_file():
+            print(f"[job] version file missing: {file_a!r} or {file_b!r}; no tasks loaded")
+            return []
+        version_a = version_a or Path(file_a).name
+        version_b = version_b or Path(file_b).name
+        changes = diff_files(file_a, file_b)
+    elif dir_a and dir_b:
+        if not Path(dir_a).is_dir() or not Path(dir_b).is_dir():
+            print(f"[job] version dir missing: {dir_a!r} or {dir_b!r}; no tasks loaded")
+            return []
+        version_a = version_a or Path(dir_a).name
+        version_b = version_b or Path(dir_b).name
+        changes = diff_trees(dir_a, dir_b)
+    else:
+        print(
+            "[job] set VERSION_A_FILE/VERSION_B_FILE or "
+            "VERSION_A_DIR/VERSION_B_DIR; no tasks loaded"
+        )
+        return []
+
     tasks = [_envelope(c, version_a, version_b) for c in changes]
     print(
         f"[job] target={target} {version_a}..{version_b}: "
-        f"{len(tasks)} changed files -> {len(tasks)} tasks"
+        f"{len(changes)} changes -> {len(tasks)} tasks"
     )
     return tasks
 
