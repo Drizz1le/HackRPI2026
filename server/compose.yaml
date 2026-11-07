@@ -50,11 +50,13 @@ services:
     environment:
       SERVER: ${SERVER:-http://coord:5000}
       # Pulled from the host environment; never hardcode the key. Unset => stub.
-      ELEVENLABS_API_KEY: ${ELEVENLABS_API_KEY:-}
-      SONG_LENGTH_MS: ${SONG_LENGTH_MS:-75000}
+      FISH_API_KEY: ${FISH_API_KEY:-}
+      FISH_VOICE: ${FISH_VOICE:-}   # optional voice reference_id
+      INPUT_DIR: /app/input
       OUTPUT_DIR: /app/output
     volumes:
-      - ../output:/app/output   # finished song lands in repo-root/output/
+      - ../output:/app/output      # finished track lands in repo-root/output/
+      - ../input:/app/input:ro     # teammate's instrumental.(wav|mp3) goes here
     depends_on:
       - coord
     restart: "no"

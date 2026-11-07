@@ -3,6 +3,10 @@ FROM python:3.12-slim
 WORKDIR /app
 ENV PYTHONUNBUFFERED=1
 
+# ffmpeg is required by pydub to read/write/overlay audio.
+RUN apt-get update && apt-get install -y --no-install-recommends ffmpeg \
+    && rm -rf /var/lib/apt/lists/*
+
 # Build context is the repo root (see compose.yaml) so the prompt files in
 # qwen/ can be copied into the image.
 COPY server/requirements.txt .
