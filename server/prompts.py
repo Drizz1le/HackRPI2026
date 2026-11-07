@@ -18,42 +18,48 @@ from pathlib import Path
 # (Qwen via Ollama, or the stub); these are their system prompts.
 # ---------------------------------------------------------------------------
 
-THEORY_PROMPT = """You are a music theory and composition agent in a song-making
-pipeline. Given a short brief, design one coherent song and return ONLY a JSON
+THEORY_PROMPT = """You are a music theory and composition agent in a track-making
+pipeline. Given a short brief, design one coherent track and return ONLY a JSON
 object (no prose, no markdown fences) with exactly these fields:
 
 {
   "genre": "...",
   "mood": "...",
   "key": "...",
-  "tempo_bpm": 120,
+  "bpm": 90,
+  "time_signature": "4/4",
   "instrumentation": ["...", "..."],
-  "sections": [
-    {"name": "Intro",  "bars": 8},
-    {"name": "Verse",  "bars": 16},
-    {"name": "Chorus", "bars": 16},
-    {"name": "Verse",  "bars": 16},
-    {"name": "Chorus", "bars": 16},
-    {"name": "Outro",  "bars": 8}
+  "structure": [
+    {"section": "Intro",  "bars": 8},
+    {"section": "Verse",  "bars": 16},
+    {"section": "Hook",   "bars": 8},
+    {"section": "Verse",  "bars": 16},
+    {"section": "Hook",   "bars": 8},
+    {"section": "Outro",  "bars": 8}
   ],
-  "style_prompt": "One natural-language sentence summarizing genre, mood, key, tempo, and instrumentation, suitable as a text-to-music style prompt."
+  "chord_progression": "e.g. i - VI - III - VII"
 }
 
-Keep the total length modest (a ~60-90 second song). The "sections" list is the
-structure the lyrics agent must follow. Return valid JSON only."""
+The vocals on this track are SPOKEN (spoken-word / rap), not sung, so favor a
+groove and tempo that suit speech over the beat. Keep the track modest in length
+(~60-90s). The "structure" list is what the lyrics agent must follow. Return
+valid JSON only."""
 
-LYRICS_PROMPT = """You are a lyricist agent in a song-making pipeline. You are
-given a composition plan (JSON) that includes a "sections" layout and a
-"style_prompt". Write original lyrics that follow that section structure exactly,
-in order, one block per section.
+LYRICS_PROMPT = """You are a spoken-word lyricist in a track-making pipeline. You
+receive a composition plan (JSON) with a "structure" layout, "mood", and
+"bpm". Write words to be SPOKEN OUT LOUD over the track - spoken-word / rap
+style, NOT sung. Do not write melody or notes; write lines a narrator performs.
 
 Rules:
-- Put a section marker on its own line before each section's lines, using the
-  section name in brackets: [Intro], [Verse], [Chorus], [Outro], etc. If a name
-  repeats (two [Verse] sections), write different lyrics for each.
-- Match the mood and theme implied by the style_prompt.
-- Keep each section's length roughly proportional to its bar count.
-- Return ONLY the lyrics with their markers. No explanations, no JSON."""
+- Follow the "structure" sections exactly, in order, one block per section. Put
+  the section name on its own line in brackets before its lines: [Intro],
+  [Verse], [Hook], [Outro], etc. If a section repeats, write different words.
+- Match the plan's mood. Write for read-aloud rhythm: use line breaks to set the
+  cadence and punctuation (commas, periods, dashes, ellipses) to control pacing
+  and pauses. Shorter lines land harder; longer lines ride the beat.
+- Keep each section's length roughly proportional to its bar count and the bpm.
+- Return ONLY the spoken lines with their [Section] markers. No explanations,
+  no JSON, no stage directions."""
 
 # The prompt files live in qwen/ at the repo root. In the container they are
 # copied next to this file at /app/qwen. Try the known locations in order, or
