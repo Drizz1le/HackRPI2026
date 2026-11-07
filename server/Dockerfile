@@ -6,6 +6,7 @@ ENV PYTHONUNBUFFERED=1
 # Build context is the repo root (see compose.yaml) so the prompt files in
 # qwen/ can be copied into the image.
 COPY server/requirements.txt .
+COPY SCOPE.md ./
 RUN pip install --no-cache-dir -r requirements.txt
 
 COPY server/*.py ./
