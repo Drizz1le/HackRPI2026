@@ -1,21 +1,49 @@
 # Coordinator machine:   docker compose up --build
-#   (starts the coordinator plus one local worker)
+#   (starts coordinator + master + one searcher)
+#   Run several searchers on one machine:  docker compose up --build --scale worker=3
 #
 # Every other machine:    SERVER=http://<coordinator-ip>:5000 docker compose up --build --no-deps worker
-#   (starts only a worker that connects to the coordinator over the LAN)
+#   (starts only searchers that connect to the coordinator over the LAN)
+#
+# The model is stubbed by default so the loop runs without Ollama. To go live:
+#   MODEL_MODE=ollama OLLAMA_HOST=http://<ollama-host>:11434 docker compose up
+#   (from inside a container, localhost is not the host; use the host's IP or
+#   host.docker.internal)
 
 services:
   coord:
-    build: .
+    build:
+      context: ..
+      dockerfile: server/Dockerfile
     command: ["python", "coord.py"]
     ports:
       - "5000:5000"
     restart: unless-stopped
 
   worker:
-    build: .
+    build:
+      context: ..
+      dockerfile: server/Dockerfile
+    command: ["python", "worker.py"]
     environment:
       SERVER: ${SERVER:-http://coord:5000}
+      MODEL_MODE: ${MODEL_MODE:-stub}
+      OLLAMA_HOST: ${OLLAMA_HOST:-http://localhost:11434}
+      WORKER_MODEL: ${WORKER_MODEL:-qwen2.5:3b}
     depends_on:
       - coord
     restart: unless-stopped
+
+  master:
+    build:
+      context: ..
+      dockerfile: server/Dockerfile
+    command: ["python", "master.py"]
+    environment:
+      SERVER: ${SERVER:-http://coord:5000}
+      MODEL_MODE: ${MODEL_MODE:-stub}
+      OLLAMA_HOST: ${OLLAMA_HOST:-http://localhost:11434}
+      MASTER_MODEL: ${MASTER_MODEL:-qwen2.5:14b}
+    depends_on:
+      - coord
+    restart: "no"
