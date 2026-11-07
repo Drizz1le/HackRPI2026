@@ -5,3 +5,4 @@ venv/
 output/
 input/*.wav
 input/*.mp3
+.env
