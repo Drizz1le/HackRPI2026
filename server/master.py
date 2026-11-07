@@ -1,15 +1,17 @@
-"""Master: collect the theory style prompt + the lyrics, then render the song.
+"""Master: render spoken vocals from the lyrics (Fish Audio TTS), then mix them
+over the teammate's instrumental and save the final track.
 
-Waits until both the theory and lyrics results are in, builds a text-to-music
-request from the theory style_prompt plus the lyrics, calls the ElevenLabs Music
-API, and saves the audio to the output directory.
+Flow once both theory and lyrics results are in:
+  1. TTS the lyrics -> output/vocals.mp3 (Fish Audio).
+  2. If input/instrumental.(wav|mp3) exists, overlay the vocals on top of it
+     (instrumental ducked a few dB) -> output/song.mp3. Otherwise the vocals
+     alone become output/song.mp3.
 
-Stub mode: if ELEVENLABS_API_KEY is not set, no API call is made. A placeholder
-text file is written instead so the whole pipeline runs end to end without
-spending credits.
+Stub mode: if FISH_API_KEY is unset, no TTS call is made. A placeholder is
+written so the pipeline still completes end to end without a key.
 """
-import json
 import os
+import shutil
 import time
 from pathlib import Path
 
@@ -21,10 +23,11 @@ SERVER = os.environ.get("SERVER", "http://localhost:5000")
 TOKEN = os.environ.get("SWARM_TOKEN", "")
 HEADERS = {"X-Swarm-Token": TOKEN} if TOKEN else {}
 
-MODEL_ID = os.environ.get("MUSIC_MODEL_ID", "music_v2_5")
-SONG_LENGTH_MS = int(os.environ.get("SONG_LENGTH_MS", "75000"))  # ~75s MVP
+API_KEY = os.environ.get("FISH_API_KEY", "")
+VOICE_ID = os.environ.get("FISH_VOICE", "")  # optional reference_id
+INPUT_DIR = Path(os.environ.get("INPUT_DIR", "input"))
 OUTPUT_DIR = Path(os.environ.get("OUTPUT_DIR", "output"))
-API_KEY = os.environ.get("ELEVENLABS_API_KEY", "")
+DUCK_DB = int(os.environ.get("DUCK_DB", "6"))  # lower instrumental under vocals
 
 
 def collect():
@@ -34,7 +37,6 @@ def collect():
 
 
 def _by_role(results):
-    """results is {task_id: {role, result}}. Return {role: result_text}."""
     out = {}
     for v in results.values():
         if isinstance(v, dict) and v.get("role"):
@@ -42,73 +44,87 @@ def _by_role(results):
     return out
 
 
-def _strip_fences(text):
-    t = (text or "").strip()
-    if t.startswith("```"):
-        t = t.split("\n", 1)[1] if "\n" in t else ""
-        if t.endswith("```"):
-            t = t.rsplit("```", 1)[0]
-    return t.strip()
-
-
-def style_prompt_from_theory(theory_text):
-    """Pull the style_prompt out of the theory JSON; fall back to raw text."""
-    try:
-        plan = json.loads(_strip_fences(theory_text))
-        if isinstance(plan, dict) and plan.get("style_prompt"):
-            return str(plan["style_prompt"])
-    except (ValueError, TypeError):
-        pass
-    return (theory_text or "").strip()
-
-
-def build_prompt(theory_text, lyrics_text):
-    style = style_prompt_from_theory(theory_text)
-    return f"{style}\n\nUse these lyrics, following the section markers:\n\n{lyrics_text}"
-
-
-def render(prompt):
-    """Produce the song. Real API when a key is set, else a stub placeholder.
-    Returns the path written."""
+def tts_vocals(lyrics):
+    """Render spoken vocals to output/vocals.mp3. Returns the path, or None in
+    stub mode or on failure. The Fish Audio call is wrapped so a missing key,
+    missing package, or signature mismatch fails gracefully."""
     OUTPUT_DIR.mkdir(parents=True, exist_ok=True)
 
     if not API_KEY:
-        path = OUTPUT_DIR / "song.txt"
+        path = OUTPUT_DIR / "vocals.txt"
         path.write_text(
-            "[STUB] ELEVENLABS_API_KEY not set; no audio generated.\n\n"
-            "The request that WOULD have been sent to ElevenLabs Music:\n"
-            f"  model_id: {MODEL_ID}\n"
-            f"  music_length_ms: {SONG_LENGTH_MS}\n\n"
-            f"prompt:\n{prompt}\n",
+            "[STUB] FISH_API_KEY not set; no TTS performed.\n\n"
+            "Lyrics that WOULD have been spoken:\n\n" + lyrics,
             encoding="utf-8",
         )
-        print(f"[stub] wrote placeholder (no API key) -> {path}")
-        return path
+        print(f"[stub] no FISH_API_KEY; wrote {path}")
+        return None
 
-    # Real call. Imported here so stub mode needs no SDK installed.
-    from elevenlabs.client import ElevenLabs
-
-    client = ElevenLabs(api_key=API_KEY)
+    # Signature verified against the fish-audio-sdk (legacy) docs:
+    #   Session(api_key).tts(TTSRequest(text=..., reference_id=..., format=...))
+    # returns an iterator of audio chunks. Wrapped per spec: on any error dump
+    # the request and return None rather than crashing the run.
+    path = OUTPUT_DIR / "vocals.mp3"
     try:
-        track = client.music.compose(
-            prompt=prompt,
-            music_length_ms=SONG_LENGTH_MS,
-            model_id=MODEL_ID,
-        )
-    except Exception as e:
-        # Fail loudly but don't crash the run: dump the request for debugging.
-        path = OUTPUT_DIR / "song_error.txt"
-        path.write_text(f"ElevenLabs request failed: {e}\n\nprompt:\n{prompt}\n",
-                        encoding="utf-8")
-        print(f"[error] ElevenLabs call failed: {e}; request saved -> {path}")
-        return path
+        from fish_audio_sdk import Session, TTSRequest
 
-    path = OUTPUT_DIR / "song.mp3"
-    with open(path, "wb") as f:
-        for chunk in track:  # compose() returns an iterator of audio chunks
-            f.write(chunk)
-    print(f"[done] wrote song -> {path}")
-    return path
+        session = Session(API_KEY)
+        kwargs = {"text": lyrics, "format": "mp3"}
+        if VOICE_ID:
+            kwargs["reference_id"] = VOICE_ID
+        request = TTSRequest(**kwargs)
+        with open(path, "wb") as f:
+            for chunk in session.tts(request):
+                f.write(chunk)
+        print(f"[tts] wrote vocals -> {path}")
+        return path
+    except Exception as e:
+        err = OUTPUT_DIR / "vocals_error.txt"
+        err.write_text(
+            f"Fish Audio TTS failed: {e}\n\nreference_id={VOICE_ID!r}\n\n"
+            "lyrics:\n" + lyrics,
+            encoding="utf-8",
+        )
+        print(f"[error] Fish Audio TTS failed: {e}; request saved -> {err}")
+        return None
+
+
+def find_instrumental():
+    for ext in ("wav", "mp3"):
+        p = INPUT_DIR / f"instrumental.{ext}"
+        if p.is_file():
+            return p
+    return None
+
+
+def mix(vocals_path):
+    """Overlay vocals on the instrumental if present, else vocals alone."""
+    if vocals_path is None:
+        print("[mix] no vocals audio (stub or TTS failure); nothing to mix")
+        return None
+
+    out = OUTPUT_DIR / "song.mp3"
+    inst = find_instrumental()
+    if inst is None:
+        shutil.copyfile(vocals_path, out)
+        print(f"[mix] no instrumental in {INPUT_DIR}/; vocals alone -> {out}")
+        return out
+
+    try:
+        from pydub import AudioSegment
+
+        vocals = AudioSegment.from_file(vocals_path)
+        bed = AudioSegment.from_file(inst) - DUCK_DB  # duck the instrumental
+        if len(bed) < len(vocals):  # pad so the vocals aren't clipped
+            bed = bed + AudioSegment.silent(duration=len(vocals) - len(bed))
+        mixed = bed.overlay(vocals)
+        mixed.export(out, format="mp3")
+        print(f"[mix] overlaid vocals on {inst.name} -> {out}")
+        return out
+    except Exception as e:
+        shutil.copyfile(vocals_path, out)
+        print(f"[mix] mix failed ({e}); fell back to vocals alone -> {out}")
+        return out
 
 
 def main():
@@ -123,9 +139,21 @@ def main():
 
         roles = _by_role(status.get("results", {}))
         if "theory" in roles and "lyrics" in roles:
-            print("theory + lyrics in; rendering song")
-            prompt = build_prompt(roles["theory"], roles["lyrics"])
-            render(prompt)
+            print("theory + lyrics in; rendering vocals and mixing")
+            vocals = tts_vocals(roles["lyrics"])
+            if vocals is None:
+                # stub mode or TTS failure: still emit a song.* so the pipeline
+                # completes with a deliverable.
+                placeholder = OUTPUT_DIR / "song.txt"
+                placeholder.write_text(
+                    "[PLACEHOLDER] no vocal audio produced (stub mode or TTS "
+                    "failure). Lyrics:\n\n" + roles["lyrics"],
+                    encoding="utf-8",
+                )
+                print(f"[placeholder] wrote {placeholder}")
+            else:
+                mix(vocals)
+            print("done")
             return
 
         have = ", ".join(sorted(roles)) or "nothing yet"
