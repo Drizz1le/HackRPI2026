@@ -1,67 +1,135 @@
-"""Master agent: the synthesizer.
+"""Master: collect the theory style prompt + the lyrics, then render the song.
 
-The searchers (workers) post version-diff findings to the coordinator. The
-master pulls those collected results, hands them to the local model with the
-master differentiation prompt, and emits the vulnerability report.
+Waits until both the theory and lyrics results are in, builds a text-to-music
+request from the theory style_prompt plus the lyrics, calls the ElevenLabs Music
+API, and saves the audio to the output directory.
 
-The model call itself lives in model.py (stub until Ollama is wired).
+Stub mode: if ELEVENLABS_API_KEY is not set, no API call is made. A placeholder
+text file is written instead so the whole pipeline runs end to end without
+spending credits.
 """
 import json
 import os
 import time
+from pathlib import Path
 
 import requests
 
-from model import call_model
-from prompts import build_system_prompt
-
 SERVER = os.environ.get("SERVER", "http://localhost:5000")
-MASTER_MODEL = os.environ.get("MASTER_MODEL", "qwen2.5:14b")
 
-# This node is the master. Assemble its system prompt once (universal prompt +
-# master differentiation prompt).
-SYSTEM_PROMPT = build_system_prompt("master")
+# Shared secret sent to the coordinator; must match its SWARM_TOKEN.
+TOKEN = os.environ.get("SWARM_TOKEN", "")
+HEADERS = {"X-Swarm-Token": TOKEN} if TOKEN else {}
+
+MODEL_ID = os.environ.get("MUSIC_MODEL_ID", "music_v2_5")
+SONG_LENGTH_MS = int(os.environ.get("SONG_LENGTH_MS", "75000"))  # ~75s MVP
+OUTPUT_DIR = Path(os.environ.get("OUTPUT_DIR", "output"))
+API_KEY = os.environ.get("ELEVENLABS_API_KEY", "")
 
 
-def collect(server):
-    """Pull everything the searchers have reported so far."""
-    r = requests.get(f"{server}/status", timeout=10)
+def collect():
+    r = requests.get(f"{SERVER}/status", headers=HEADERS, timeout=10)
     r.raise_for_status()
     return r.json()
 
 
-def synthesize(status):
-    """Hand the collected searcher findings to the model as the master."""
-    user_prompt = json.dumps(
-        {
-            "instruction": (
-                "Merge the subagent version-diff findings below and produce the "
-                "verified vulnerability report per your master prompt."
-            ),
-            "results": status.get("results", {}),
-        },
-        indent=2,
-    )
-    return call_model(SYSTEM_PROMPT, user_prompt, MASTER_MODEL)
+def _by_role(results):
+    """results is {task_id: {role, result}}. Return {role: result_text}."""
+    out = {}
+    for v in results.values():
+        if isinstance(v, dict) and v.get("role"):
+            out[v["role"]] = v.get("result", "")
+    return out
+
+
+def _strip_fences(text):
+    t = (text or "").strip()
+    if t.startswith("```"):
+        t = t.split("\n", 1)[1] if "\n" in t else ""
+        if t.endswith("```"):
+            t = t.rsplit("```", 1)[0]
+    return t.strip()
+
+
+def style_prompt_from_theory(theory_text):
+    """Pull the style_prompt out of the theory JSON; fall back to raw text."""
+    try:
+        plan = json.loads(_strip_fences(theory_text))
+        if isinstance(plan, dict) and plan.get("style_prompt"):
+            return str(plan["style_prompt"])
+    except (ValueError, TypeError):
+        pass
+    return (theory_text or "").strip()
+
+
+def build_prompt(theory_text, lyrics_text):
+    style = style_prompt_from_theory(theory_text)
+    return f"{style}\n\nUse these lyrics, following the section markers:\n\n{lyrics_text}"
+
+
+def render(prompt):
+    """Produce the song. Real API when a key is set, else a stub placeholder.
+    Returns the path written."""
+    OUTPUT_DIR.mkdir(parents=True, exist_ok=True)
+
+    if not API_KEY:
+        path = OUTPUT_DIR / "song.txt"
+        path.write_text(
+            "[STUB] ELEVENLABS_API_KEY not set; no audio generated.\n\n"
+            "The request that WOULD have been sent to ElevenLabs Music:\n"
+            f"  model_id: {MODEL_ID}\n"
+            f"  music_length_ms: {SONG_LENGTH_MS}\n\n"
+            f"prompt:\n{prompt}\n",
+            encoding="utf-8",
+        )
+        print(f"[stub] wrote placeholder (no API key) -> {path}")
+        return path
+
+    # Real call. Imported here so stub mode needs no SDK installed.
+    from elevenlabs.client import ElevenLabs
+
+    client = ElevenLabs(api_key=API_KEY)
+    try:
+        track = client.music.compose(
+            prompt=prompt,
+            music_length_ms=SONG_LENGTH_MS,
+            model_id=MODEL_ID,
+        )
+    except Exception as e:
+        # Fail loudly but don't crash the run: dump the request for debugging.
+        path = OUTPUT_DIR / "song_error.txt"
+        path.write_text(f"ElevenLabs request failed: {e}\n\nprompt:\n{prompt}\n",
+                        encoding="utf-8")
+        print(f"[error] ElevenLabs call failed: {e}; request saved -> {path}")
+        return path
+
+    path = OUTPUT_DIR / "song.mp3"
+    with open(path, "wb") as f:
+        for chunk in track:  # compose() returns an iterator of audio chunks
+            f.write(chunk)
+    print(f"[done] wrote song -> {path}")
+    return path
 
 
 def main():
     print(f"master online; watching {SERVER}")
     while True:
         try:
-            status = collect(SERVER)
+            status = collect()
         except requests.RequestException as e:
             print(f"coordinator unreachable ({e}); retrying...")
             time.sleep(3)
             continue
 
-        done, queued, running = status["done"], status["queued"], status["in_progress"]
-        if done > 0 and queued == 0 and running == 0:
-            print(f"all {done} searcher tasks in; synthesizing report")
-            print(synthesize(status))
+        roles = _by_role(status.get("results", {}))
+        if "theory" in roles and "lyrics" in roles:
+            print("theory + lyrics in; rendering song")
+            prompt = build_prompt(roles["theory"], roles["lyrics"])
+            render(prompt)
             return
 
-        print(f"waiting: queued={queued} in_progress={running} done={done}")
+        have = ", ".join(sorted(roles)) or "nothing yet"
+        print(f"waiting: have {have}")
         time.sleep(3)
 
 
