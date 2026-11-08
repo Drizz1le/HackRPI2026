@@ -1,0 +1,24 @@
+{
+ "seconds": 146.32,
+ "tempo_bpm": 112.3,
+ "key": "F minor",
+ "peak_dbfs": -1.6,
+ "rms_dbfs": -16.0,
+ "loudness_range_db": 11.5,
+ "brightness_hz": 1831,
+ "silent": false,
+ "spectrogram": "~\\Documents\\GitHub\\flstudio\\runaway-lamc\\exports\\v3\\Run Right Back v3.png",
+ "integrated_lufs": -12.5,
+ "lra_lu": 6.5,
+ "true_peak_dbfs": -1.3,
+ "notes": "Runaway kick baked -14 dB (it was 13 dB over the sample, 72% of drop energy)",
+ "master": {
+  "after": {
+   "integrated_lufs": -8.1,
+   "lra_lu": 4.9,
+   "true_peak_dbfs": -1.0
+  },
+  "glue_gr_db": -0.5995565894793733,
+  "limiter_max_gr_db": -2.7948761075014756
+ }
+}

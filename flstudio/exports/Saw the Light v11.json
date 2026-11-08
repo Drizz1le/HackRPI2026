@@ -1,0 +1,15 @@
+{
+ "seconds": 254.42,
+ "tempo_bpm": 92.3,
+ "key": "F# major",
+ "peak_dbfs": -1.2,
+ "rms_dbfs": -12.8,
+ "loudness_range_db": 14.3,
+ "brightness_hz": 1868,
+ "silent": false,
+ "spectrogram": "~\\Documents\\GitHub\\flstudio\\exports\\v11\\Saw the Light v11.png",
+ "integrated_lufs": -8.3,
+ "lra_lu": 5.0,
+ "true_peak_dbfs": -0.4,
+ "notes": "ENERGY: tempo 82 -> 92 BPM (refs: Flashing Lights 2 96, Eyes Closed 89, GAJ 107-112); all chops/loops re-warped to the new grid (median 5-12 ms); master ceiling -1.0 dB (v10 hit +0.2 dBTP)"
+}

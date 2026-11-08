@@ -1,0 +1,15 @@
+{
+ "seconds": 243.68,
+ "tempo_bpm": 172.3,
+ "key": "G# minor",
+ "peak_dbfs": -1.6,
+ "rms_dbfs": -12.7,
+ "loudness_range_db": 10.5,
+ "brightness_hz": 1855,
+ "silent": false,
+ "spectrogram": "~\\Documents\\GitHub\\flstudio\\black-gold\\exports\\v1\\Black Gold v1.png",
+ "integrated_lufs": -9.3,
+ "lra_lu": 5.2,
+ "true_peak_dbfs": -0.8,
+ "notes": "first: intro rechop i-VI-iv-V / i-bII-III-V, Minnie hook, Dean solo"
+}
