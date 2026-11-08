@@ -58,8 +58,68 @@ Rules:
   cadence and punctuation (commas, periods, dashes, ellipses) to control pacing
   and pauses. Shorter lines land harder; longer lines ride the beat.
 - Keep each section's length roughly proportional to its bar count and the bpm.
+- Every line you write is read aloud by a narrator, word for word. Write only
+  the narrator's words: no descriptions of the track or the mix, no chord or
+  note names, and nothing after the last section.
 - Return ONLY the spoken lines with their [Section] markers. No explanations,
   no JSON, no stage directions."""
+
+# ---------------------------------------------------------------------------
+# Music theory library. The lyrics agent gets COMPOSER_GUIDE.md plus the vocals/
+# files the guide assigns to the vocal stage, appended to LYRICS_PROMPT.
+# ---------------------------------------------------------------------------
+
+_LIBRARY_DIRS = [
+    os.environ.get("LIBRARY_DIR"),
+    Path(__file__).resolve().parent.parent / "library",  # repo root/library (local)
+    Path(__file__).resolve().parent / "library",          # /app/library (container)
+]
+
+_LYRICS_LIBRARY_FILES = [
+    "COMPOSER_GUIDE.md",
+    "vocals/prosody_stress.md",
+    "vocals/global_vocal_techniques.md",
+]
+
+_LIBRARY_PREAMBLE = """REFERENCE LIBRARY
+
+The files below come from the project's music theory library. The composer
+guide was written for a sung, multi-agent setup. In this pipeline you are the
+vocal stage, and the vocals are SPOKEN, not sung. Use the guide's vocal and
+prosody guidance (stress on strong beats, natural pauses, pacing, matching the
+arrangement's energy) to shape your lines. Ignore guidance about melody, pitch,
+vibrato, or sung technique. The guide's arrangement and mixing advice is
+for the composer, not for you. Where anything here conflicts with the rules above,
+the rules above win. In particular, still output no emotion tags or stage
+directions."""
+
+
+def _library_dir():
+    for d in _LIBRARY_DIRS:
+        if d and Path(d).is_dir():
+            return Path(d)
+    return None
+
+
+def build_lyrics_prompt():
+    """LYRICS_PROMPT plus the composer guide and vocals library files.
+
+    Falls back to the bare LYRICS_PROMPT if the library directory is missing,
+    so a worker without the library still runs.
+    """
+    lib = _library_dir()
+    if lib is None:
+        print("warning: library/ not found; lyrics agent runs without the composer guide")
+        return LYRICS_PROMPT
+    parts = [LYRICS_PROMPT.rstrip(), _LIBRARY_PREAMBLE]
+    for rel in _LYRICS_LIBRARY_FILES:
+        f = lib / rel
+        if f.is_file():
+            parts.append(f"=== library/{rel} ===\n" + f.read_text(encoding="utf-8").strip())
+        else:
+            print(f"warning: missing library file {f}")
+    return "\n\n---\n\n".join(parts)
+
 
 # The prompt files live in qwen/ at the repo root. In the container they are
 # copied next to this file at /app/qwen. Try the known locations in order, or

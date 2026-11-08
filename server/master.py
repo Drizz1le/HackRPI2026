@@ -17,6 +17,8 @@ from pathlib import Path
 
 import requests
 
+from lyrics_clean import clean_lyrics, speech_text
+
 SERVER = os.environ.get("SERVER", "http://localhost:5000")
 
 # Shared secret sent to the coordinator; must match its SWARM_TOKEN.
@@ -71,7 +73,8 @@ def tts_vocals(lyrics):
         from fish_audio_sdk import Session, TTSRequest
 
         session = Session(API_KEY)
-        kwargs = {"text": lyrics, "format": "mp3"}
+        # [Section] markers are layout, not speech; strip them for TTS.
+        kwargs = {"text": speech_text(lyrics), "format": "mp3"}
         if VOICE_ID:
             kwargs["reference_id"] = VOICE_ID
         request = TTSRequest(**kwargs)
@@ -142,14 +145,16 @@ def main():
         roles = _by_role(status.get("results", {}))
         if "theory" in roles and "lyrics" in roles:
             print("theory + lyrics in; rendering vocals and mixing")
-            vocals = tts_vocals(roles["lyrics"])
+            # Drop preamble and production cues so TTS only speaks lyrics.
+            lyrics = clean_lyrics(roles["lyrics"])
+            vocals = tts_vocals(lyrics)
             if vocals is None:
                 # stub mode or TTS failure: still emit a song.* so the pipeline
                 # completes with a deliverable.
                 placeholder = OUTPUT_DIR / "song.txt"
                 placeholder.write_text(
                     "[PLACEHOLDER] no vocal audio produced (stub mode or TTS "
-                    "failure). Lyrics:\n\n" + roles["lyrics"],
+                    "failure). Lyrics:\n\n" + lyrics,
                     encoding="utf-8",
                 )
                 print(f"[placeholder] wrote {placeholder}")

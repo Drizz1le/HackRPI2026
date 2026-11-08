@@ -1,16 +1,22 @@
 import json, os, requests, time
 
-from model import call_model
-from prompts import THEORY_PROMPT, LYRICS_PROMPT
+from model import call_model, check_models
+from prompts import THEORY_PROMPT, build_lyrics_prompt
 
 # ---- point this at the coordinator's address (LAN IP, or the Vultr public IP) ----
 SERVER = os.environ.get("SERVER", "http://192.168.1.50:5000")
-WORKER_MODEL = os.environ.get("WORKER_MODEL", "qwen2.5:3b")
+WORKER_MODEL = os.environ.get("WORKER_MODEL", "qwen2.5:7b")
+# Optional per-role overrides, e.g. keep theory on a small model on a low-VRAM
+# machine: THEORY_MODEL=qwen2.5:3b. Both default to WORKER_MODEL.
+THEORY_MODEL = os.environ.get("THEORY_MODEL") or WORKER_MODEL
+LYRICS_MODEL = os.environ.get("LYRICS_MODEL") or WORKER_MODEL
 # Optional one-line brief seeding the theory agent.
 SONG_BRIEF = os.environ.get("SONG_BRIEF", "Create an original song of your choice.")
 
 # Shared secret sent to the coordinator; must match its SWARM_TOKEN.
 TOKEN = os.environ.get("SWARM_TOKEN", "")
+# Lyrics system prompt = LYRICS_PROMPT + composer guide + vocals library files.
+LYRICS_SYSTEM = build_lyrics_prompt()
 HEADERS = {"X-Swarm-Token": TOKEN} if TOKEN else {}
 
 
@@ -34,14 +40,16 @@ def run_task(task):
     """
     role = task.get("role")
     if role == "theory":
-        return call_model(THEORY_PROMPT, SONG_BRIEF, WORKER_MODEL)
+        return call_model(THEORY_PROMPT, SONG_BRIEF, THEORY_MODEL)
     if role == "lyrics":
         user = "Composition plan to write lyrics for:\n" + str(task.get("theory", ""))
-        return call_model(LYRICS_PROMPT, user, WORKER_MODEL)
+        return call_model(LYRICS_SYSTEM, user, LYRICS_MODEL)
     return json.dumps({"error": f"unknown role {role!r}"})
 
 
 def main():
+    print(f"models: theory={THEORY_MODEL} lyrics={LYRICS_MODEL}")
+    check_models({THEORY_MODEL, LYRICS_MODEL})
     node_id = register()
     print(f"registered as {node_id}, pulling tasks from {SERVER}")
     while True:

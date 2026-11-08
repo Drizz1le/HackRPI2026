@@ -15,6 +15,7 @@ RUN pip install --no-cache-dir -r requirements.txt
 
 COPY server/*.py ./
 COPY qwen/ ./qwen/
+COPY library/ ./library/
 COPY fixtures/ ./fixtures/
 
 # Default: run as a searcher (subagent). compose overrides this per service.
