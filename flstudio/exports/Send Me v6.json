@@ -1,0 +1,24 @@
+{
+ "seconds": 262.13,
+ "tempo_bpm": 73.8,
+ "key": "E major",
+ "peak_dbfs": -1.6,
+ "rms_dbfs": -12.1,
+ "loudness_range_db": 9.0,
+ "brightness_hz": 1651,
+ "silent": false,
+ "spectrogram": "~\\Documents\\GitHub\\flstudio\\send-me\\exports\\v6\\Send Me v6.png",
+ "integrated_lufs": -9.0,
+ "lra_lu": 3.8,
+ "true_peak_dbfs": -0.3,
+ "notes": "less reverb (vox delay 62%->30% fb, 18% wet; 12.6s halls -> 3s; rooms -8..-12 dB), 2.5k pocket in layers, twins' vocals +3.5 dB in the chops",
+ "master": {
+  "after": {
+   "integrated_lufs": -8.1,
+   "lra_lu": 3.0,
+   "true_peak_dbfs": -0.9
+  },
+  "glue_gr_db": -1.9037320751680487,
+  "limiter_max_gr_db": -2.5209185400531133
+ }
+}

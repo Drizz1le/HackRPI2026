@@ -1,0 +1,442 @@
+﻿== channels
+  channels.channelCount  Get channels count
+  channels.channelNumber  Get channel number
+  channels.closeGraphEditor  Close graph editor
+  channels.deselectAll  Deselect all channels
+  channels.focusEditor  focus channel editor
+  channels.getActivityLevel  Get channel activity level
+  channels.getChannelColor  Get channel color
+  channels.getChannelIndex  Get channel index
+  channels.getChannelMidiInPort  Get channel midi in port
+  channels.getChannelName  Get channel name
+  channels.getChannelPan  Get channel pan
+  channels.getChannelPitch  Get channel pitch
+  channels.getChannelType  get channel type
+  channels.getChannelVolume  Get channel volume
+  channels.getCurrentStepParam  Get current step param
+  channels.getGridBit  Get channel grid bit
+  channels.getGridBitWithLoop  Get grid bit with loop
+  channels.getRecEventId  Get channel rec event id
+  channels.getStepParam  Get step param
+  channels.getTargetFxTrack  Get channel target FX track
+  channels.incEventValue  increase event value
+  channels.isChannelMuted  Get channel mute state
+  channels.isChannelSelected  Get channel selected state
+  channels.isChannelSolo  Get channel solo state
+  channels.isGraphEditorVisible  Returns true if graph editor is visible
+  channels.isGridBitAssigned  Is grid bit assigned
+  channels.isHighLighted  Is higlight rectangle defined
+  channels.midiNoteOn  Set midi note on for channel
+  channels.muteChannel  Toggle channel mute state
+  channels.processRECEvent  Process rec event
+  channels.quickQuantize  Perform quick quantize
+  channels.selectAll  Select all channels
+  channels.selectChannel  Set channel selected state
+  channels.selectOneChannel  Select channel exclusively
+  channels.selectedChannel  Get selected channel number
+  channels.setChannelColor  Set channel color
+  channels.setChannelName  Set channel name
+  channels.setChannelPan  Set channel pan
+  channels.setChannelPitch  Set channel pitch
+  channels.setChannelVolume  Set channel volume
+  channels.setGridBit  Set channel grid bit
+  channels.setStepParameterByIndex  Set step parameter by index
+  channels.setTargetFxTrack  Set channel target FX track
+  channels.showCSForm  Show cs form
+  channels.showEditor  focus channel editor
+  channels.showGraphEditor  Show graph editor
+  channels.soloChannel  Toggle channel solo state
+  channels.updateGraphEditor  Update graph editor
+== mixer
+  mixer.afterRoutingChanged  After routing changed
+  mixer.armTrack  Toggle track armed state
+  mixer.automateEvent  Automate event
+  mixer.deselectAll  Deselect all tracks
+  mixer.enableTrack  Toggle track enabled state
+  mixer.enableTrackSlots  Toggle track slots enabled state
+  mixer.focusEditor  focus mixer editor
+  mixer.getActiveEffectIndex  get Active Effect Index
+  mixer.getAutoSmoothEventValue  Get event ID value string
+  mixer.getCurrentTempo  Get current tempo
+  mixer.getEqBandCount  Get eq band count
+  mixer.getEqBandwidth  Get eq bandwidth
+  mixer.getEqFrequency  Get eq frequency
+  mixer.getEqGain  Get eq gain
+  mixer.getEventIDName  Get event ID name
+  mixer.getEventIDValueString  Get event ID value string
+  mixer.getEventValue  Get event value from midi
+  mixer.getLastPeakVol  Get last peak vol
+  mixer.getPluginMixLevel  Get track plugin mix level
+  mixer.getRecPPS  Get Rec pps
+  mixer.getRouteSendActive  Get route send state
+  mixer.getRouteToLevel  Get route to lebel
+  mixer.getSlotColor  Get slot color
+  mixer.getSongStepPos  Get song step position
+  mixer.getSongTickPos  Get sing tick pos
+  mixer.getTrackColor  Get track color
+  mixer.getTrackCount  Get track count
+  mixer.getTrackDockSide  Get track dock
+  mixer.getTrackInfo  Get tracks info
+  mixer.getTrackName  Get track name
+  mixer.getTrackPan  Get track pan
+  mixer.getTrackPeaks  Get track peaks
+  mixer.getTrackPluginId  Get track plugin ID
+  mixer.getTrackRecordingFileName  Get track recording file name
+  mixer.getTrackStereoSep  Get track stereo separation
+  mixer.getTrackVolume  Get track volume
+  mixer.isTrackArmed  Get track armed state
+  mixer.isTrackAutomationEnabled  Get track autotimation state
+  mixer.isTrackEnabled  Get track enabled state
+  mixer.isTrackMuteLock  Get track mute lock state
+  mixer.isTrackMuted  Get track mute state
+  mixer.isTrackPluginValid  Get track plugin valid state
+  mixer.isTrackRevPolarity  Get track reversed polarity state
+  mixer.isTrackSelected  Get track selected state
+  mixer.isTrackSlotsEnabled  Get track slots enabled state
+  mixer.isTrackSolo  Get track solo state
+  mixer.isTrackSwapChannels  Get track swap channels state
+  mixer.linkChannelToTrack  Link channel to track
+  mixer.linkTrackToChannel  Link track to channel
+  mixer.muteTrack  Toggle track mute state
+  mixer.remoteFindEventValue  Remote find event value
+  mixer.revTrackPolarity  Toggle track reverssed polarity state
+  mixer.selectAll  Select all tracks
+  mixer.selectTrack  Set track selected state
+  mixer.setActiveTrack  Set active track
+  mixer.setEqBandwidth  Set eq bandwidth
+  mixer.setEqFrequency  Set eq frequency
+  mixer.setEqGain  Set eq gain
+  mixer.setPluginMixLevel  Set track plugin mix level
+  mixer.setRouteTo  Set route to
+  mixer.setRouteToLevel  Set route to lebel
+  mixer.setSlotColor  Set slot color
+  mixer.setTrackColor  Set track color
+  mixer.setTrackName  Set track name
+  mixer.setTrackNumber  Set track number
+  mixer.setTrackPan  Set track pan
+  mixer.setTrackStereoSep  Set track setereo separation
+  mixer.setTrackVolume  Ser track volume
+  mixer.soloTrack  Toggle track solo state
+  mixer.swapTrackChannels  Toggle track swap channels state
+  mixer.trackCount  Get tracks count
+  mixer.trackNumber  Get track number
+== plugins
+  plugins.getColor  Get plugin color
+  plugins.getName  Get plugin name
+  plugins.getPadInfo  Get plugin pad info
+  plugins.getParamCount  Get plugin parameter count
+  plugins.getParamName  Get plugin parameter name
+  plugins.getParamValue  Get plugin parameter value
+  plugins.getParamValueString  Get plugin parameter value string
+  plugins.getPluginName  Get plugin name
+  plugins.getPresetCount  Get preset count
+  plugins.isValid  Get plugin validity
+  plugins.nextPreset  Select next plugin preset
+  plugins.prevPreset  Select previous plugin preset
+  plugins.setParamValue  Set plugin parameter value
+== transport
+  transport.continuousMove  Continuous move
+  transport.continuousMovePos  Continuous move pos
+  transport.fastForward  Fast forward song pos
+  transport.getHWBeatLEDState  get HWBeatLEDState
+  transport.getLoopMode  Get loop mode
+  transport.getSongLength  Get song length
+  transport.getSongPos  Get song position
+  transport.getSongPosHint  Get song position hint
+  transport.globalTransport  Global transport
+  transport.isPlaying  Returns if the program is playing or stopped
+  transport.isRecording  Get recording state
+  transport.markerJumpJog  Jog marker jump
+  transport.markerSelJog  Jog marker selection
+  transport.record  Start recording
+  transport.rewind  Rewind song
+  transport.setLoopMode  Set loop mode
+  transport.setPlaybackSpeed  Set playback speed
+  transport.setSongPos  Set song position
+  transport.start  Start playback
+  transport.stop  Stop playback
+== patterns
+  patterns.burnLoop  Burn loop
+  patterns.clonePattern  Clone pattern
+  patterns.deselectAll  Deselect all patterns
+  patterns.ensureValidNoteRecord  Ensure Valid Note Record
+  patterns.findFirstNextEmptyPat  Find first next empty pattern
+  patterns.getActivePatternGroup  Get active pattern group
+  patterns.getBlockSetStatus  Get block set status
+  patterns.getChannelLoopStyle  Get channel loop style
+  patterns.getPatternColor  Get pattern color
+  patterns.getPatternGroupCount  Get pattern group count
+  patterns.getPatternGroupName  Get pattern group name
+  patterns.getPatternLength  Get pattern length
+  patterns.getPatternName  Get pattern name
+  patterns.getPatternsInGroup  Get patterns in group
+  patterns.isPatternDefault  Get pattern default state
+  patterns.isPatternSelected  Get pattern selected state
+  patterns.jumpToPattern  Jump to pattern
+  patterns.patternCount  Get patterns count
+  patterns.patternMax  Get max pattern id
+  patterns.patternNumber  Get current pattern number
+  patterns.selectAll  Select all patterns
+  patterns.selectPattern  Select pattern
+  patterns.setChannelLoop  Set channel loop
+  patterns.setPatternColor  Set pattern color
+  patterns.setPatternName  Set pattern name
+== playlist
+  playlist.deselectAll  Deselect all tracks
+  playlist.getDisplayZone  Get display zone number
+  playlist.getLiveBlockColor  Get live block color
+  playlist.getLiveBlockStatus  Get live block status
+  playlist.getLiveLoopMode  Get live loop mode
+  playlist.getLivePosSnap  Get live pos snap
+  playlist.getLiveStatus  Get live status
+  playlist.getLiveTrigSnap  Get live trig snap
+  playlist.getLiveTriggerMode  Get live trigger mode
+  playlist.getPerformanceModeState  Get performance mode state
+  playlist.getSongStartTickPos  Get song start tick position
+  playlist.getTrackActivityLevel  Get track activity level
+  playlist.getTrackActivityLevelVis  Get track visual activity level
+  playlist.getTrackColor  Get track color
+  playlist.getTrackName  Get track name
+  playlist.getVisTimeBar  Get time bar
+  playlist.getVisTimeStep  Get time step
+  playlist.getVisTimeTick  Get time tick
+  playlist.incLiveLoopMode  Increase live loop mode
+  playlist.incLivePosSnap  Increase live pos snap
+  playlist.incLiveTrigMode  Increase live trig mode
+  playlist.incLiveTrigSnap  Increase live trig snap
+  playlist.isTrackMuteLock  Get track mute lock state
+  playlist.isTrackMuted  Get track mute state
+  playlist.isTrackSelected  Get track selected state
+  playlist.isTrackSolo  Get track solo state
+  playlist.liveBlockNumToTime  Live block number to time
+  playlist.liveDisplayZone  Live display zone
+  playlist.liveTimeToBlockNum  Live time to block number
+  playlist.lockDisplayZone  Lock display zone
+  playlist.muteTrack  Toggle track mute state
+  playlist.muteTrackLock  Toggle track mute lock state
+  playlist.refreshLiveClips  Refresh live clips
+  playlist.scrollTo  Scroll to
+  playlist.selectAll  Select all tracks
+  playlist.selectTrack  Set track selected state
+  playlist.setTrackColor  Set track color
+  playlist.setTrackName  Set track name
+  playlist.soloTrack  Toggle track solo state
+  playlist.trackCount  Get track count
+  playlist.triggerLiveClip  Trigger live clips
+== arrangement
+  arrangement.addAutoTimeMarker  Add audio time marker
+  arrangement.currentTime  Current time
+  arrangement.currentTimeHint  Current time hint
+  arrangement.getMarkerName  Get marker name
+  arrangement.jumpToMarker  Jump to arrangement marker
+  arrangement.liveSelection  Live selection
+  arrangement.liveSelectionStart  Live selection start
+  arrangement.selectionClear  Clear selection
+  arrangement.selectionEnd  Selection end
+  arrangement.selectionIsActive  Selection active
+  arrangement.selectionSet  Set selection start
+  arrangement.selectionStart  Selection start
+== ui
+  ui.closeActivePopupMenu  Close active popup menu
+  ui.closeAllMenu  Close all menu
+  ui.copy  Copy
+  ui.crDisplayRect  Display selection rectangle in channel rack
+  ui.cut  Cut
+  ui.delete  Delete
+  ui.down  Down keyboard key
+  ui.enter  Enter
+  ui.escape  Escape
+  ui.getFocused  Get form focus state
+  ui.getFocusedFormCaption  Get focused form caption
+  ui.getFocusedFormID  Get focused form ID
+  ui.getFocusedNodeCaption  Get focused node caption
+  ui.getFocusedNodeFileType  Get focused node file type
+  ui.getFocusedPluginName  Get focused plugin name
+  ui.getHintMsg  Get FL Studio hint
+  ui.getHintValue  Get hint value
+  ui.getProgTitle  Get FL Studio title
+  ui.getSnapMode  Get snap mode
+  ui.getStepEditMode  Get step edit mode
+  ui.getTimeDispMin  Is time time display set to minutes
+  ui.getVersion  Get FL Studio version as string
+  ui.getVisible  Get form visible state
+  ui.hideWindow  Hide window
+  ui.horZoom  Horizontal zoom
+  ui.insert  Insert
+  ui.isBrowserAutoHide  Get browser auto hide state
+  ui.isClosing  Get closing state
+  ui.isInPopupMenu  Is in popup menu
+  ui.isLoopRecEnabled  Is loop recording enabled
+  ui.isMetronomeEnabled  Is metronome enabled
+  ui.isPrecountEnabled  Is precount enabled
+  ui.isStartOnInputEnabled  Is start on input enabled
+  ui.jog  Generic jog (can be used to select stuff)
+  ui.jog2  Alternate generic jog (can be used to relocate stuff)
+  ui.launchAudioEditor  Launch audio editor
+  ui.left  Left keyboard key
+  ui.miDisplayDockRect  Display selection rectangle in mixer dock
+  ui.miDisplayRect  Display selection rectangle in mixer
+  ui.moveJog  Used to relocate items
+  ui.navigateBrowser  Navigate browser
+  ui.navigateBrowserMenu  Navigate browser menu
+  ui.navigateBrowserTabs  Navigate browser tabs
+  ui.next  
+  ui.nextWindow  Next window
+  ui.no  No
+  ui.openEventEditor  Open event editor
+  ui.paste  Paste
+  ui.previewBrowserMenuItem  Preview browser menu item
+  ui.previous  
+  ui.right  Right keyboard key
+  ui.scrollWindow  Scroll window
+  ui.selectBrowserMenuItem  Select browser menu item
+  ui.selectWindow  Select window
+  ui.setBrowserAutoHide  Set browser auto hide state
+  ui.setFocused  Set form focus state
+  ui.setHintMsg  Set FL Studio hint
+  ui.setSnapMode  Set snap mode
+  ui.setStepEditMode  Set step edit mode
+  ui.setTimeDispMin  Is time time display set to minutes
+  ui.showNotification  Show FL Studio notification
+  ui.showWindow  Show window
+  ui.snapMode  Toggle snap mode
+  ui.snapOnOff  Snap on/off
+  ui.strip  Touch-sensitive jog strip (left .. center .. right)
+  ui.stripHold  to do
+  ui.stripJog  Touch-sensitive jog in jog mode
+  ui.toggleBrowserNode  Toggle browser node
+  ui.up  Up keyboard key
+  ui.verZoom  Vertical zoom
+  ui.yes  Yes
+== general
+  general.clearLog  Clear log
+  general.dumpScoreLog  Dump score log
+  general.getChangedFlag  Get changed flag
+  general.getPrecount  Get precounr
+  general.getProjectAuthor  Get project author
+  general.getProjectGenre  Get project genre
+  general.getProjectTitle  Get project title
+  general.getRecPPB  Get rec ppb
+  general.getRecPPQ  Get rec ppq
+  general.getUndoHistoryCount  Get undo history count
+  general.getUndoHistoryLast  Get undo history last
+  general.getUndoHistoryPos  Get undo history position
+  general.getUndoLevelHint  Get undo level
+  general.getUseMetronome  Get use metronome
+  general.getVersion  Get Midi scripting version
+  general.processRECEvent  Process rec event
+  general.restoreUndo  Restore undo
+  general.restoreUndoLevel  Restore undo by level
+  general.safeToEdit  Safe to edit stuff
+  general.saveUndo  Save undo
+  general.setUndoHistoryCount  Set undo history count
+  general.setUndoHistoryLast  Set undo history last
+  general.setUndoHistoryPos  Set undo history position
+  general.undo  Undo/redo last, or move down in undo history
+  general.undoDown  Move down in undo history
+  general.undoUp  Move up in undo history
+  general.undoUpDown  Move up and down in undo history
+== device
+  device.baseTrackSelect  Base track select
+  device.createRefreshThread  Create refresh thread
+  device.destroyRefreshThread  Destroy refresh thread
+  device.directFeedback  Send out generic midi message
+  device.dispatch  Dispatch midi message
+  device.dispatchGetReceiverPortNumber  Get receiver port number
+  device.dispatchReceiverCount  Get dispatch midi message receiver count
+  device.findEventID  Find event id
+  device.forwardMIDICC  Send  generic midi message to active plugin
+  device.fullRefresh  Perform full refresh
+  device.getDeviceID  Get device hardware id
+  device.getIdleElapsed  Get idle elapsed
+  device.getLinkedChannel  Get channel value of linked control back or -1 if not linked
+  device.getLinkedInfo  Get linked control info back or -1 if not linked
+  device.getLinkedParamName  Get string value of linked control back or error if not linked
+  device.getLinkedValue  Get normalized value of linked control back or -1 if not linked
+  device.getLinkedValueString  Get string value of linked control back or error if not linked
+  device.getMasterSync  Get device master sync
+  device.getName  Get device name
+  device.getPortNumber  Is device assigned
+  device.hardwareRefreshMixerTrack  Hardware refresh mixer track
+  device.isAssigned  Is device assigned
+  device.isDoubleClick  Double-clicking handling for MIDI
+  device.isMidiOutAssigned  Is device midi out assigned
+  device.linkToLastTweaked  Link controller control to last tweked parameter
+  device.midiOutMsg  Send out midi message
+  device.midiOutNewMsg  Send out new midi message
+  device.midiOutSysex  Send midi out sysex
+  device.processMIDICC  Send out generic midi message
+  device.repeatMidiEvent  Repeat midi event
+  device.sendMsgGeneric  Send out generic midi message
+  device.setHasMeters  Set has meters
+  device.setMasterSync  Set device master sync
+  device.stopRepeatMidiEvent  stop repeat midi event
+== midi
+  midi.EncodeRemoteControlID  
+== utils
+  utils.ColorToHex  
+  utils.ColorToRGB  
+  utils.DivModU  
+  utils.FadeColor  
+  utils.GetNoteName  
+  utils.HSVtoRGB  
+  utils.InterNoSwap  
+  utils.KnobAccelToRes2  
+  utils.LightenColor  
+  utils.Limited  
+  utils.OffsetRect  
+  utils.RGBToColor  
+  utils.RGBToHSV  
+  utils.RGBToHSVColor  
+  utils.RectOverlap  
+  utils.RectOverlapEqual  
+  utils.Sign  
+  utils.SignOf  
+  utils.SwapInt  
+  utils.TClipLauncherLastClip  
+  utils.TRect  
+  utils.VolTodB  
+  utils.Zeros  
+  utils.Zeros_Strict  
+== launchMapPages
+  launchMapPages.checkMapForHiddenItem  Check for launchpad hidden item
+  launchMapPages.createOverlayMap  Create overlay map
+  launchMapPages.getMapCount  Get launchmap items length
+  launchMapPages.getMapItemAftertouch  Get launchmap item aftertouch
+  launchMapPages.getMapItemChannel  Get launchmap item destination channel
+  launchMapPages.getMapItemColor  Get launchmap item color
+  launchMapPages.init  Init launchmap pages
+  launchMapPages.length  Get launchmap pages length
+  launchMapPages.processMapItem  Process map item
+  launchMapPages.releaseMapItem  Release map item
+  launchMapPages.setMapItemTarget  Set map item destination target
+  launchMapPages.updateMap  Update launchmap page
+== screen
+  screen.addMeter  Add meter
+  screen.addTextLine  Add text line
+  screen.animateText  Animate text
+  screen.blank  Blank
+  screen.deInit  Destroy screen object
+  screen.displayBar  Display bar
+  screen.displayText  Display text
+  screen.displayTimedText  Display timed text
+  screen.drawRect  Draw rectangle
+  screen.drawText  Draw text
+  screen.eraseRect  Erase rectangle
+  screen.fillRect  Fill rectangle
+  screen.findTextLine  Find text line
+  screen.getScreenActiveCounter  Get screen active counter
+  screen.hideMenu  Hide menu
+  screen.init  Init screen object
+  screen.isBlanked  Is blanked
+  screen.isUnBlank  Is Unblank
+  screen.keepDisplayActive  Keep display active
+  screen.menuItemClick  Menu item click
+  screen.menuNext  Select next menu
+  screen.menuPrev  Select previous menu
+  screen.menuShowing  Return true when menu is showing
+  screen.removeTextLine  Remove text line
+  screen.setScreenActiveCounter  Set screen active counter
+  screen.setup  Setup screen properties
+  screen.unBlank  Unblank
+  screen.update  Update screen

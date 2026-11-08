@@ -1,15 +1,19 @@
 """Master: render spoken vocals from the lyrics (Fish Audio TTS), then mix them
 over the teammate's instrumental and save the final track.
 
-Flow once both theory and lyrics results are in:
+Flow once every role the coordinator expects is in (theory + lyrics, plus
+instrumental when the coordinator runs with INSTRUMENTAL=1):
   1. TTS the lyrics -> output/vocals.mp3 (Fish Audio).
-  2. If input/instrumental.(wav|mp3) exists, overlay the vocals on top of it
-     (instrumental ducked a few dB) -> output/song.mp3. Otherwise the vocals
-     alone become output/song.mp3.
+  2. Pick the instrumental: the WAV the instrumental worker rendered in FL
+     Studio, else input/instrumental.(wav|mp3) if present.
+  3. Overlay the vocals on it (instrumental ducked a few dB), starting where
+     the arrangement's intro ends -> output/song.mp3. With no instrumental the
+     vocals alone become output/song.mp3.
 
 Stub mode: if FISH_API_KEY is unset, no TTS call is made. A placeholder is
 written so the pipeline still completes end to end without a key.
 """
+import json
 import os
 import shutil
 import time
@@ -94,37 +98,63 @@ def tts_vocals(lyrics):
         return None
 
 
-def find_instrumental():
+def rendered_instrumental(result):
+    """Parse the instrumental worker's result -> (wav path, vocal start ms), or None."""
+    if not result:
+        return None
+    try:
+        info = json.loads(result)
+    except (TypeError, ValueError):
+        print("[instrumental] result is not JSON; ignoring it")
+        return None
+    if info.get("error"):
+        print(f"[instrumental] worker failed: {info['error']}")
+        return None
+    for w in info.get("warnings", []):
+        print(f"[instrumental] warning: {w}")
+    wav = Path(info.get("wav", ""))
+    if not wav.is_file():
+        print(f"[instrumental] rendered WAV not found at {wav} (the master must "
+              "run on the same machine as the instrumental worker)")
+        return None
+    return wav, int(float(info.get("vocal_start_seconds", 0)) * 1000)
+
+
+def find_instrumental(rendered=None):
+    """-> (path, vocal start ms) or None. The FL render wins over input/."""
+    if rendered:
+        return rendered
     for ext in ("wav", "mp3"):
         p = INPUT_DIR / f"instrumental.{ext}"
         if p.is_file():
-            return p
+            return p, 0
     return None
 
 
-def mix(vocals_path):
+def mix(vocals_path, instrumental=None):
     """Overlay vocals on the instrumental if present, else vocals alone."""
     if vocals_path is None:
         print("[mix] no vocals audio (stub or TTS failure); nothing to mix")
         return None
 
     out = OUTPUT_DIR / "song.mp3"
-    inst = find_instrumental()
-    if inst is None:
+    if instrumental is None:
         shutil.copyfile(vocals_path, out)
-        print(f"[mix] no instrumental in {INPUT_DIR}/; vocals alone -> {out}")
+        print(f"[mix] no instrumental (none rendered, none in {INPUT_DIR}/); vocals alone -> {out}")
         return out
+    inst, start_ms = instrumental
 
     try:
         from pydub import AudioSegment
 
         vocals = AudioSegment.from_file(vocals_path)
         bed = AudioSegment.from_file(inst) - DUCK_DB  # duck the instrumental
-        if len(bed) < len(vocals):  # pad so the vocals aren't clipped
-            bed = bed + AudioSegment.silent(duration=len(vocals) - len(bed))
-        mixed = bed.overlay(vocals)
+        need = start_ms + len(vocals)
+        if len(bed) < need:  # pad so the vocals aren't clipped
+            bed = bed + AudioSegment.silent(duration=need - len(bed))
+        mixed = bed.overlay(vocals, position=start_ms)
         mixed.export(out, format="mp3")
-        print(f"[mix] overlaid vocals on {inst.name} -> {out}")
+        print(f"[mix] overlaid vocals on {inst.name} at {start_ms / 1000:.1f}s -> {out}")
         return out
     except Exception as e:
         shutil.copyfile(vocals_path, out)
@@ -143,8 +173,10 @@ def main():
             continue
 
         roles = _by_role(status.get("results", {}))
-        if "theory" in roles and "lyrics" in roles:
-            print("theory + lyrics in; rendering vocals and mixing")
+        expected = status.get("expected") or ["theory", "lyrics"]
+        if all(r in roles for r in expected):
+            print(f"{' + '.join(expected)} in; rendering vocals and mixing")
+            instrumental = find_instrumental(rendered_instrumental(roles.get("instrumental")))
             # Drop preamble and production cues so TTS only speaks lyrics.
             lyrics = clean_lyrics(roles["lyrics"])
             vocals = tts_vocals(lyrics)
@@ -152,19 +184,21 @@ def main():
                 # stub mode or TTS failure: still emit a song.* so the pipeline
                 # completes with a deliverable.
                 placeholder = OUTPUT_DIR / "song.txt"
+                inst_note = (f"Instrumental: {instrumental[0]}\n\n" if instrumental
+                             else "No instrumental.\n\n")
                 placeholder.write_text(
                     "[PLACEHOLDER] no vocal audio produced (stub mode or TTS "
-                    "failure). Lyrics:\n\n" + lyrics,
+                    "failure).\n" + inst_note + "Lyrics:\n\n" + lyrics,
                     encoding="utf-8",
                 )
                 print(f"[placeholder] wrote {placeholder}")
             else:
-                mix(vocals)
+                mix(vocals, instrumental)
             print("done")
             return
 
         have = ", ".join(sorted(roles)) or "nothing yet"
-        print(f"waiting: have {have}")
+        print(f"waiting: have {have}; need {', '.join(expected)}")
         time.sleep(3)
 
 

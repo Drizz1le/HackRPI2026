@@ -1,4 +1,5 @@
-import json, os, requests, time
+import json, os, requests, sys, time
+from pathlib import Path
 
 from model import call_model, check_models
 from prompts import THEORY_PROMPT, build_lyrics_prompt
@@ -18,6 +19,12 @@ TOKEN = os.environ.get("SWARM_TOKEN", "")
 # Lyrics system prompt = LYRICS_PROMPT + composer guide + vocals library files.
 LYRICS_SYSTEM = build_lyrics_prompt()
 HEADERS = {"X-Swarm-Token": TOKEN} if TOKEN else {}
+
+# Roles this worker will take. Default: the LLM roles any machine can run.
+# Only a Windows machine with FL Studio should add "instrumental".
+ROLES = [r.strip() for r in os.environ.get("ROLES", "theory,lyrics").split(",") if r.strip()]
+REPO = Path(__file__).resolve().parent.parent
+OUTPUT_DIR = Path(os.environ.get("OUTPUT_DIR", REPO / "output"))
 
 
 def register():
@@ -44,18 +51,40 @@ def run_task(task):
     if role == "lyrics":
         user = "Composition plan to write lyrics for:\n" + str(task.get("theory", ""))
         return call_model(LYRICS_SYSTEM, user, LYRICS_MODEL)
+    if role == "instrumental":
+        return render_instrumental(task.get("theory", ""))
     return json.dumps({"error": f"unknown role {role!r}"})
+
+
+def render_instrumental(theory):
+    """theory plan -> arrangement -> FL Studio project -> rendered WAV.
+
+    Returns JSON with the WAV path. The master reads that file directly, so the
+    instrumental worker and the master must share a disk (same machine)."""
+    from arrange import plan_from_theory
+
+    sys.path.insert(0, str(REPO / "flstudio" / "tools"))
+    from cluster_render import render
+
+    plan = plan_from_theory(theory)
+    try:
+        instrumentation = json.loads(theory).get("instrumentation", ())
+    except (ValueError, AttributeError):
+        instrumentation = ()
+    info = render(plan, str(OUTPUT_DIR), instrumentation=instrumentation)
+    return json.dumps(info)
 
 
 def main():
     print(f"models: theory={THEORY_MODEL} lyrics={LYRICS_MODEL}")
-    check_models({THEORY_MODEL, LYRICS_MODEL})
+    llm_roles = {"theory": THEORY_MODEL, "lyrics": LYRICS_MODEL}
+    check_models({m for r, m in llm_roles.items() if r in ROLES})
     node_id = register()
-    print(f"registered as {node_id}, pulling tasks from {SERVER}")
+    print(f"registered as {node_id}, roles {','.join(ROLES)}, pulling tasks from {SERVER}")
     while True:
         try:
             r = requests.get(
-                f"{SERVER}/task", params={"node_id": node_id},
+                f"{SERVER}/task", params={"node_id": node_id, "roles": ",".join(ROLES)},
                 headers=HEADERS, timeout=10,
             ).json()
         except requests.RequestException as e:

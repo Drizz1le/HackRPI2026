@@ -28,6 +28,13 @@ nodes = {}  # node_id -> last_seen time
 # get their tasks double-dispatched. Override with LEASE_SECS.
 LEASE_SECS = int(os.environ.get("LEASE_SECS", "300"))
 
+# INSTRUMENTAL=1 adds an "instrumental" role: once theory is in, a worker on a
+# machine with FL Studio builds and renders the backing track (in parallel with
+# lyrics). Off by default so a cluster without an FL machine still finishes.
+INSTRUMENTAL = os.environ.get("INSTRUMENTAL", "0").lower() in ("1", "true", "yes")
+AFTER_THEORY = ["lyrics"] + (["instrumental"] if INSTRUMENTAL else [])
+EXPECTED = ["theory"] + AFTER_THEORY  # the master waits for all of these
+
 
 def load_job():
     """Seed the queue with the theory task. The lyrics task is enqueued once
@@ -35,7 +42,7 @@ def load_job():
     is not loaded up front. See post_result."""
     with lock:
         queue.append({"task_id": str(uuid.uuid4()), "role": "theory"})
-    print(f"loaded {len(queue)} task(s); lyrics follows theory")
+    print(f"loaded {len(queue)} task(s); {' + '.join(AFTER_THEORY)} follow theory")
 
 
 def requeue_dead():
@@ -63,11 +70,15 @@ def register():
 @app.get("/task")
 def get_task():
     node_id = request.args.get("node_id", "?")
+    # Workers may say which roles they can run (?roles=theory,lyrics); only
+    # matching tasks are handed out. No roles param = any task.
+    roles = [r for r in request.args.get("roles", "").split(",") if r]
     with lock:
         nodes[node_id] = time.time()  # counts as a heartbeat
-        if not queue:
+        idx = next((i for i, t in enumerate(queue) if not roles or t["role"] in roles), None)
+        if idx is None:
             return jsonify({"status": "none"})
-        task = queue.pop(0)
+        task = queue.pop(idx)
         assigned[task["task_id"]] = {"task": task, "node": node_id, "at": time.time()}
         return jsonify({"status": "ok", "task": task})
 
@@ -83,14 +94,15 @@ def post_result():
             results[tid] = {"role": role, "result": data["result"]}
         assigned.pop(tid, None)
         nodes[data["node_id"]] = time.time()
-        # Dependency: once theory is in, build the lyrics task from its output.
+        # Dependency: once theory is in, build the next tasks from its output.
         if newly and role == "theory":
-            queue.append({
-                "task_id": str(uuid.uuid4()),
-                "role": "lyrics",
-                "theory": data["result"],
-            })
-            print("[enqueue] lyrics task (theory ready)")
+            for next_role in AFTER_THEORY:
+                queue.append({
+                    "task_id": str(uuid.uuid4()),
+                    "role": next_role,
+                    "theory": data["result"],
+                })
+                print(f"[enqueue] {next_role} task (theory ready)")
     print(f"[done] {role} {tid[:8]} from {data['node_id']}")
     return jsonify({"ok": True})
 
@@ -105,6 +117,7 @@ def status():
                 "queued": len(queue),
                 "in_progress": len(assigned),
                 "done": len(results),
+                "expected": EXPECTED,
                 "results": results,
             }
         )

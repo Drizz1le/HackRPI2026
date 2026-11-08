@@ -1,0 +1,15 @@
+{
+ "seconds": 214.03,
+ "tempo_bpm": 95.7,
+ "key": "C# major",
+ "peak_dbfs": -1.6,
+ "rms_dbfs": -11.1,
+ "loudness_range_db": 5.1,
+ "brightness_hz": 1669,
+ "silent": false,
+ "spectrogram": "~\\Documents\\GitHub\\flstudio\\cry-of-a-dreamer\\exports\\v1\\Cry of a Dreamer v1.png",
+ "integrated_lufs": -7.6,
+ "lra_lu": 3.3,
+ "true_peak_dbfs": -0.6,
+ "notes": "first flip: Sylvers +4st 96 BPM, College Dropout drums"
+}
