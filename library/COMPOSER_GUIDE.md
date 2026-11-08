@@ -1,37 +1,74 @@
-# FL Studio Composer Agent Guide
+# COMPOSER_GUIDE.md
 
-## Overview
-This guide explains how to navigate and apply the music theory files in the `library/` directory. These files provide the theoretical foundation for composing, arranging, and producing music in FL Studio.
+## Master Guide for Downstream Music Generation Agents
 
-## Directory Structure
-*   **`library/harmony/`**: Contains rules for chords, scales, modes, and progressions.
-*   **`library/arrangement/`**: Contains blueprints for song structure, stems, and layering.
-*   **`library/vocals/`**: Contains rules for vocal prosody and phonetic stress for AI singing.
+This document acts as the central orchestrator and blueprint for the **FL Studio Composer Agent** and the **ElevenLabs Singer Agent**. It synthesizes the research library files into clear, operational rules for multi-agent music generation.
 
-## How to Use the Files
+---
 
-### 1. Harmony (`harmony/harmony_rules.md`)
-*   **Dorian Mode:** Use when you need a "bright minor" sound. Ideal for jazz-influenced pop and electronic tracks.
-*   **ii-V-I Progression:** Use for strong, resolved harmonic movement. Great for jazz and pop.
-*   **Modal Interchange:** Use to add color and variety by borrowing chords from parallel modes (e.g., iv, bVI, bVII).
+## 🗂 Library Architecture Reference
 
-### 2. Arrangement (`arrangement/structural_blueprints.md`)
-*   **EDM Structure:** Follow the Intro -> Breakdown -> Build -> Drop -> Outro blueprint. Focus on energy curves and stem layering.
-*   **Pop Structure:** Use the ABABCB pattern. Focus on hooks, dynamics, and frequency layering.
-*   **Symphonic Structure:** Use for cinematic tracks. Focus on themes, development, and orchestration.
+The research library is organized into three primary domain modules:
 
-### 3. Vocals (`vocals/vocal_prosody_rules.md`)
-*   **Prosody:** Control pitch, pace, stress, and pausing for natural-sounding AI vocals.
-*   **Phonetic Stress:** Align syllable stress with musical beats. Lengthen vowels on stressed syllables.
-*   **AI Singing:** Use prosody markers in your prompts to guide the AI. Combine pitch, pace, and stress for expressiveness.
+```text
+library/
+├── arrangement/
+│   ├── global_composition.md      <-- Macro composition rules, energy flow, & arrangement strategies
+│   └── structure_blueprints.md    <-- Song section blueprints, measure counts, & structural transitions
+├── harmony/
+│   ├── core_harmony.md            <-- Functional harmony, chord progressions, cadences, & voicings
+│   └── global_scales.md           <-- Modes, scale selections, emotional mappings, & key signatures
+└── vocals/
+    ├── global_vocal_techniques.md <-- Vocal styles, performance dynamics, & timbre directions
+    └── prosody_stress.md          <-- Syllable alignment, metric accenting, & text-to-speech cues
+```
 
-## Workflow
-1.  **Choose a Structure:** Start with `structural_blueprints.md` to decide on EDM, Pop, or Symphonic structure.
-2.  **Select Harmony:** Use `harmony_rules.md` to choose chords and progressions based on the desired mood.
-3.  **Compose Vocals:** Use `vocal_prosody_rules.md` to guide the AI in creating natural and expressive vocal lines.
-4.  **Layer and Arrange:** Apply stem layering and dynamics rules from `structural_blueprints.md`.
+---
 
-## Tips
-*   **Experiment:** Don't be afraid to mix and match rules from different sections.
-*   **Reference:** Use the examples in the files as a guide for your own compositions.
-*   **Iterate:** Refine your composition by applying and adjusting the rules as needed.
+## 🎼 Phase 1: Harmonic & Modal Initialization (Composer Agent)
+
+1. **Scale & Mode Selection** (`library/harmony/global_scales.md`):
+   * Select a foundational mode or scale based on the targeted emotional arc of the piece (e.g., *Dorian* for nostalgia/melancholy with uplifting elements, *Aeolian* for deep sadness, *Lydian* for dreamy/bright landscapes).
+   * Maintain key consistency across MIDI channels unless executing an intentional modal interchange or modulation.
+
+2. **Progression Building** (`library/harmony/core_harmony.md`):
+   * Construct main chord progressions following functional harmony rules (e.g., tonic establishment, subdominant departure, dominant tension, cadential resolution).
+   * Apply smooth voice leading—avoid parallel fifths/octaves unless producing genre-specific effects (e.g., power chords or synth stacks).
+   * Use extended and altered chords (7ths, 9ths, suspended tones) during dynamic build-ups to increase harmonic color.
+
+---
+
+## 📐 Phase 2: Structural Planning & Arrangement (Composer Agent)
+
+1. **Song Macro-Structure** (`library/arrangement/structure_blueprints.md`):
+   * Define the overall layout before placing patterns into the FL Studio Playlist (e.g., `Intro` $\rightarrow$ `Verse 1` $\rightarrow$ `Pre-Chorus` $\rightarrow$ `Chorus` $\rightarrow$ `Verse 2` $\rightarrow$ `Chorus` $\rightarrow$ `Bridge` $\rightarrow$ `Outro`).
+   * Adhere to strict measure counts (e.g., 8-bar or 16-bar section blocks) locked to the session BPM and time signature.
+
+2. **Arrangement & Layering** (`library/arrangement/global_composition.md`):
+   * **Frequency Management:** Reserve specific frequency bands for core elements (sub-bass below 80 Hz, kick punch at 90–120 Hz, vocals/lead melody at 1–4 kHz).
+   * **Stem Distribution:** Introduce or remove instrument stems every 4 to 8 bars to maintain energy progression and prevent static arrangements.
+   * **Dynamic Arc:** Scale velocity and channel volumes across the arrangement so that the primary `Chorus` or climax reaches peak loudness and density.
+
+---
+
+## 🎤 Phase 3: Vocal & Prosody Alignment (Singer Agent)
+
+1. **Prosody & Metric Accent** (`library/vocals/prosody_stress.md`):
+   * Align lyric stress patterns with the downbeats and metric accents established by the Composer Agent's drum/bass rhythm.
+   * Insert pause markers, commas, or breath spaces at natural syntactic boundaries to maintain human prosody.
+
+2. **Vocal Direction & Styling** (`library/vocals/global_vocal_techniques.md`):
+   * Apply emotion tags (`[whispers]`, `[softly]`, `[belt]`, `[sighs]`) to lyrics, matching the dynamic level of the underlying arrangement.
+   * Ensure vocal pitch range and register align with the chord voicings generated in `core_harmony.md`.
+
+---
+
+## 🔄 Execution Workflow Summary
+
+```text
+  [Read COMPOSER_GUIDE.md]
+             │
+             ├──► Composer Agent ──► Parse harmony/ & arrangement/ ──► Generate MIDI & FL Studio Layout
+             │
+             └──► Singer Agent   ──► Parse vocals/ ─────────────────► Generate ElevenLabs Audio & Timing Cues
+```

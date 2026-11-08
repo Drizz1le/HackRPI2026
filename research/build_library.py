@@ -74,9 +74,9 @@ research_agent.register_for_llm(description="Save .md file to folder")(save_mark
 if __name__ == "__main__":
     prompt = """
     Execute a full research run on music composition:
-    1. Search for core harmony rules (Dorian mode, ii-V-I progressions, modal interchange) and save to harmony/
-    2. Search for song structural blueprints (EDM/Pop/Symphonic structures, stems, layering) and save to arrangement/
-    3. Search for vocal prosody & phonetic stress rules for singing AI and save to vocals/
+    1. Search for core harmony rules (Dorian mode, ii-V-I progressions, modal interchange), compile a comprehensive understanding of musical harmony and scale structure from different musical traditions throughout history, and save to harmony/
+    2. Search for song structural blueprints (EDM/Pop/Symphonic structures, stems, layering), study various musical traditions throughout the world and collect and encyclopedic knowledge base about how songs can be structured and composed and save to arrangement/
+    3. Search for vocal prosody & phonetic stress rules which draws on the techniques of different musical traditions throughout history for singing AI and save to vocals/
     4. Write a master guide `COMPOSER_GUIDE.md` in the library root directing the FL Studio Composer Agent on how to read these files.
     
     Say TERMINATE when finished.
